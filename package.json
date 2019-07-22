@@ -18,9 +18,11 @@
     "@vue/cli-plugin-babel": "^3.9.0",
     "@vue/cli-plugin-typescript": "^3.9.0",
     "@vue/cli-service": "^3.9.0",
+    "echarts": "^4.2.1",
     "sass": "^1.18.0",
     "sass-loader": "^7.1.0",
     "typescript": "^3.4.3",
+    "vue-echarts": "^4.0.3",
     "vue-template-compiler": "^2.6.10"
   }
 }
