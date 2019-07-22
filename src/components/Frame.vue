@@ -43,8 +43,9 @@
                     :placeholder="pointsDemo"
                   >
                   </v-textarea>                  
-                  <v-btn small color="normal">draw</v-btn>
-                  <v-btn small color="normal">import</v-btn>
+                  <v-btn small color="normal" @click="draw()">draw</v-btn>
+                  <v-btn small color="normal" class="mr-3">import</v-btn>
+                  <span>length: {{score}}</span>
                 </v-card>
               </v-tab-item>
             </v-tabs>
@@ -65,6 +66,7 @@
 <script lang="ts">
 import { Vue, Prop, Component } from 'vue-property-decorator';
 import Chart from './Chart.vue';
+import { ECharts } from 'echarts';
 @Component({
   components: {
     Chart,
@@ -79,8 +81,19 @@ export default class Frame extends Vue {
   private tabHeight: number = 30;
   private points: string = "";
   private pointsDemo: string = `20 120\n50 200\n40 50\n`;
+  private verbose: string = "";
 
-  private options: object = {
+  private score: number = 0;
+
+  private eChart: ECharts | null = null; // for eChart
+  private options: {
+    xAxis: object,
+    yAxis: object,
+    series: {
+      data: number[][],
+      type: string
+    }[]
+  } = {
     xAxis: {},
     yAxis: {},
     series: [{
@@ -91,14 +104,62 @@ export default class Frame extends Vue {
 
   @Prop({default: ''}) private source: string = '';
 
-
-
   private mounted() {
     const ele = document.getElementById('myEcharts');
-    console.log(this.$echarts);
-    const chart: any = this.$echarts.init(ele);    
-    chart.setOption(this.options);
-    console.log(this.$echarts);
+    this.eChart = this.$echarts.init(ele);  
+    console.log(this.eChart);
+    this.chart(this.options);
+  }
+
+  private chart(option: {
+    xAxis: object,
+    yAxis: object,
+    series: {
+      data: number[][],
+      type: string
+    }[]
+  }) {
+    this.calculateScore(option.series[0].data);
+    if (this.eChart !== null)
+      this.eChart.setOption(option);
+  }
+
+  private calculateScore(array: number[][]) {
+    this.score = 0;
+    console.log(array.length);
+    for (let i = 0; i < array.length - 1; ++i) {
+      this.score += this.calcEuclide(array[i], array[i+1]);
+    }
+    this.score += this.calcEuclide(array[0], array[array.length - 1]);
+  }
+
+  private calcEuclide(p1: number[], p2: number[]) : number {
+    const x = Math.abs(p1[0] - p2[0]);
+    const y = Math.abs(p1[1] - p2[1]);
+    return Math.sqrt(x * x + y * y);
+  }
+
+  private draw() {
+    const pointsArr: string[] = this.points.split('\n');
+    let newData: number[][] =  [];
+    pointsArr.forEach(ele => {
+      const xy: string[] = ele.split(' ');
+      if (xy.length > 2) {
+        this.verbose = "invalid input\n";
+        return;
+      }
+      const data: number[] = [Number(xy[0]), Number(xy[1])];
+      newData.push(data);
+    });
+    newData.push(newData[0]);
+    this.chart({
+      xAxis: {},
+      yAxis: {},
+      series: [{
+        data: newData,
+        type: 'line'
+      }]
+    });
   }
 }
 
